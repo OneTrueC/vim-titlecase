@@ -26,10 +26,27 @@ function! s:capitalize(string)
   return toupper(s[0]) . s[1:]
 endfunction
 
+function! s:baecapitalize(string)
+  " Don't change intentional all caps
+  if(toupper(a:string) ==# a:string)
+    return toupper(a:string)
+  endif
+
+  let s = tolower(a:string)
+
+  " Only match the user defined list for begining and end
+  if (index(s:local_exclusion_list, s) >= 0)
+    return s
+  endif
+
+  return toupper(s[0]) . s[1:]
+endfunction
+
 function! titlecase#titlecase(type, ...) abort
   let WORD_PATTERN = '\<\(\k\)\(\k*''*\k*\)\>'
   " calls s:capitalize with the whole pattern match
   let UPCASE_REPLACEMENT = '\=s:capitalize(submatch(0))'
+  let BAEUPCASE_REPLACEMENT = '\=s:baecapitalize(submatch(0))'
 
   let regbak = @@
   try
@@ -48,8 +65,8 @@ function! titlecase#titlecase(type, ...) abort
     elseif a:type == 'line'
       execute '''[,'']s/'.WORD_PATTERN.'/'.UPCASE_REPLACEMENT.'/ge'
       " Always capitalize the start and end
-      execute '''[,'']s/'.WORD_PATTERN.'/\u\1\L\2/e'
-      execute '''[,'']s/'.WORD_PATTERN.'\(\K*\)$/\u\1\L\2\e\3/e'
+      execute '''[,'']s/'.WORD_PATTERN.'/'.BAEUPCASE_REPLACEMENT.'/e'
+      execute '''[,'']s/'.WORD_PATTERN.'\(\K*\)$/'.BAEUPCASE_REPLACEMENT.'/e'
     else
       silent exe "normal! `[v`]y"
       let titlecased = substitute(@@, WORD_PATTERN, UPCASE_REPLACEMENT, 'g')
